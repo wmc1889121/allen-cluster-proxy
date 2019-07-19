@@ -9,6 +9,7 @@ import com.allen.db.consensus.ConsensusConfig;
 import com.allen.protocol.entity.MessageType;
 import com.allen.protocol.entity.NettyMessage;
 import com.allen.protocol.utils.SerializationUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,26 +42,35 @@ public class AllenDBProxy {
     }
 
     public DataVO get(String key) throws Exception {
-        Node node = conn(leaderId);
-        return null;//todo
+        Command command = new Command();
+        command.setType(Command.Type.GET);
+        command.setOperates(Arrays.asList(dataVO(key, null)));
+        Object body = request(leaderId, command);
+        Command c = SerializationUtils.read((byte[]) body, Command.class);
+        return CollectionUtils.isEmpty(c.getOperates()) ? null : c.getOperates().get(0);
     }
 
     public List<DataVO> set(String key, Object value) throws Exception {
-        Node leader = conn(leaderId);
-
         Command command = new Command();
         command.setType(Command.Type.SET);
         command.setOperates(Arrays.asList(dataVO(key, value)));
+        Object body = request(leaderId, command);
+        // todo
+        Command c = SerializationUtils.read((byte[]) body, Command.class);
+        return c.getOperates();
+    }
+
+    private Object request(long nodeId, Command command) throws Exception {
+        Node leader = conn(nodeId);
         HashMap<String, String> att = new HashMap<>();
         att.put(Constants.NETTY_MESSAGE_HEADER_ATTR_BODY_TYPE, BusMsgType.REQ_CLIENT.ordinal() + "");
         NettyMessage res = leader.getClient().request(att, command);
         NettyMessage.Header header = res.getHeader();
         if (header.getType() == MessageType.REDIRECT.code()) {
             leaderId = Long.valueOf(header.getAttribute(Constants.NETTY_MESSAGE_HEADER_ATTR_REDIRECT_PATH));
-            return set(key, value);
+            return request(leaderId, command);
         }
-        Command c = SerializationUtils.read((byte[]) res.getBody(), Command.class);
-        return c.getOperates();
+        return res.getBody();
     }
 
     private DataVO dataVO(String key, Object value) {
