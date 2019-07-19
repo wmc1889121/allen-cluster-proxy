@@ -21,7 +21,7 @@ public class TestController {
     }
 
     @PostMapping
-    public Object set(@RequestBody Command command) throws Exception {
-        return allenDBProxy.set(command);
+    public Object set(@RequestBody DataVO operate) throws Exception {
+        return allenDBProxy.set(operate.getKey(), operate.getVal());
     }
 }

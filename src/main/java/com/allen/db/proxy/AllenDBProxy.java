@@ -10,7 +10,9 @@ import com.allen.protocol.entity.MessageType;
 import com.allen.protocol.entity.NettyMessage;
 import com.allen.protocol.utils.SerializationUtils;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AllenDBProxy {
@@ -43,18 +45,25 @@ public class AllenDBProxy {
         return null;//todo
     }
 
-    public DataVO set(Command command) throws Exception {
+    public List<DataVO> set(String key, Object value) throws Exception {
         Node leader = conn(leaderId);
 
+        Command command = new Command();
+        command.setType(Command.Type.SET);
+        command.setOperates(Arrays.asList(dataVO(key, value)));
         HashMap<String, String> att = new HashMap<>();
         att.put(Constants.NETTY_MESSAGE_HEADER_ATTR_BODY_TYPE, BusMsgType.REQ_CLIENT.ordinal() + "");
         NettyMessage res = leader.getClient().request(att, command);
         NettyMessage.Header header = res.getHeader();
         if (header.getType() == MessageType.REDIRECT.code()) {
             leaderId = Long.valueOf(header.getAttribute(Constants.NETTY_MESSAGE_HEADER_ATTR_REDIRECT_PATH));
-            return set(command);
+            return set(key, value);
         }
         Command c = SerializationUtils.read((byte[]) res.getBody(), Command.class);
-        return c.getRecord().get(0);
+        return c.getOperates();
+    }
+
+    private DataVO dataVO(String key, Object value) {
+        return new DataVO(key, value);
     }
 }
