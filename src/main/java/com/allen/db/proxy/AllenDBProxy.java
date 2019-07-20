@@ -5,7 +5,6 @@ import com.allen.common.entity.BusMsgType;
 import com.allen.common.entity.Command;
 import com.allen.common.entity.DataVO;
 import com.allen.common.entity.Node;
-import com.allen.db.consensus.ConsensusConfig;
 import com.allen.protocol.entity.MessageType;
 import com.allen.protocol.entity.NettyMessage;
 import com.allen.protocol.utils.SerializationUtils;
@@ -23,7 +22,7 @@ public class AllenDBProxy {
 
     public AllenDBProxy(String cluster) {
         nodes = new HashMap<>();
-        String[] strNodes = ConsensusConfig.cluster.split(",");
+        String[] strNodes = cluster.split(",");
         for (int i = 0; i < strNodes.length; i++) {
             String[] idAddress = strNodes[i].split("@");
             String[] hostPort = idAddress[1].split(":");

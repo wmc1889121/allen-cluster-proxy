@@ -36,7 +36,7 @@ public class DemoConfiguration {
                 .build();
     }
 
-    @Value("allen.db.cluster")
+    @Value("${allen.db.cluster}")
     private String cluster;
 
     @Bean
