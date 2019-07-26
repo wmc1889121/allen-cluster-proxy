@@ -5,6 +5,7 @@ import com.allen.common.entity.BusMsgType;
 import com.allen.common.entity.Command;
 import com.allen.common.entity.DataVO;
 import com.allen.common.entity.Node;
+import com.allen.protocol.entity.AllenException;
 import com.allen.protocol.entity.MessageType;
 import com.allen.protocol.entity.NettyMessage;
 import com.allen.protocol.utils.SerializationUtils;
@@ -12,7 +13,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class AllenDBProxy {
@@ -49,14 +49,16 @@ public class AllenDBProxy {
         return CollectionUtils.isEmpty(c.getOperates()) ? null : c.getOperates().get(0);
     }
 
-    public List<DataVO> set(String key, Object value) throws Exception {
+    public String set(String key, Object value) throws Exception {
         Command command = new Command();
         command.setType(Command.Type.SET);
         command.setOperates(Arrays.asList(dataVO(key, value)));
         Object body = request(leaderId, command);
-        // todo
-        Command c = SerializationUtils.read((byte[]) body, Command.class);
-        return c.getOperates();
+        String result = new String((byte[]) body);
+        if (!"success".equals(result)) {
+            throw new AllenException(result);
+        }
+        return result;
     }
 
     private Object request(long nodeId, Command command) throws Exception {
