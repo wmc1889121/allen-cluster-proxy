@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Api
 @RestController
@@ -51,21 +53,26 @@ public class TestController {
 
     private Map<String, Object> parallelRead(List<String> src) throws Exception {
         Map<String, Object> res = new HashMap<>();
-//        int tsize = 8;
-//        CountDownLatch latch = new CountDownLatch(tsize);
-//        ExecutorService service = Executors.newFixedThreadPool(tsize);
+        int tsize = 8;
+        CountDownLatch latch = new CountDownLatch(tsize);
+        ExecutorService service = Executors.newFixedThreadPool(tsize);
         long begin = System.currentTimeMillis();
         System.out.println("query开始：" + begin);
-//        service.submit(() -> run(res, latch, 0, 50000, src));
-//        service.submit(() -> run(res, latch, 50000, 100000, src));
-//        service.submit(() -> run(res, latch, 100000, 150000, src));
-//        service.submit(() -> run(res, latch, 150000, 200000, src));
-//        service.submit(() -> run(res, latch, 200000, 250000, src));
-//        service.submit(() -> run(res, latch, 250000, 300000, src));
-//        service.submit(() -> run(res, latch, 300000, 350000, src));
-//        service.submit(() -> run(res, latch, 350000, 361983, src));
-//        latch.await();
-        run(res, null, 0, src.size(), src);
+        service.submit(() -> run(res, latch, 0, 50000, src));
+        service.submit(() -> run(res, latch, 50000, 100000, src));
+        service.submit(() -> run(res, latch, 100000, 150000, src));
+        service.submit(() -> run(res, latch, 150000, 200000, src));
+        service.submit(() -> run(res, latch, 200000, 250000, src));
+        service.submit(() -> run(res, latch, 250000, 300000, src));
+        service.submit(() -> run(res, latch, 300000, 350000, src));
+        service.submit(() -> run(res, latch, 350000, 370000, src));
+
+//        service.submit(() -> run(res, latch, 0, 100000, src));
+//        service.submit(() -> run(res, latch, 100000, 200000, src));
+//        service.submit(() -> run(res, latch, 200000, 300000, src));
+//        service.submit(() -> run(res, latch, 300000, 370000, src));
+        latch.await();
+//        run(res, null, 0, src.size(), src);
         res.put("耗时：", System.currentTimeMillis() - begin);
         return res;
     }
@@ -76,9 +83,9 @@ public class TestController {
                 String key = src.get(i);
                 try {
                     DataVO vo = allenDBProxy.get(key);
-//                    if (vo.getVal() == null) {
-//                        res.put(key, "数据丢失");
-//                    }
+                    if (vo.getVal() == null) {
+                        res.put(key, "数据丢失");
+                    }
                 } catch (Exception e) {
                     res.put(key, e.toString());
                 }
