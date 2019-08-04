@@ -37,7 +37,7 @@ public class TestController {
         FileReader fr = null;
         BufferedReader br = null;
         List<String> src = new ArrayList<>();
-        fr = new FileReader("D:/allen_db/test_data_10");
+        fr = new FileReader("D:/allen_db/test/test_data_40");
         br = new BufferedReader(fr);
         String s;
         while ((s = br.readLine()) != null) {
@@ -53,18 +53,25 @@ public class TestController {
 
     private Map<String, Object> parallelRead(List<String> src) throws Exception {
         Map<String, Object> res = new HashMap<>();
-        int tsize = 8;
+        int tsize = 15;
         CountDownLatch latch = new CountDownLatch(tsize);
         ExecutorService service = Executors.newFixedThreadPool(tsize);
         long begin = System.currentTimeMillis();
         System.out.println("query开始：" + begin);
-        service.submit(() -> run(res, latch, 0, 50000, src));
-        service.submit(() -> run(res, latch, 50000, 100000, src));
-        service.submit(() -> run(res, latch, 100000, 150000, src));
-        service.submit(() -> run(res, latch, 150000, 200000, src));
-        service.submit(() -> run(res, latch, 200000, 250000, src));
-        service.submit(() -> run(res, latch, 250000, 300000, src));
-        service.submit(() -> run(res, latch, 300000, 350000, src));
+        service.submit(() -> run(res, latch, 0, 25000, src));
+        service.submit(() -> run(res, latch, 25000, 50000, src));
+        service.submit(() -> run(res, latch, 50000, 75000, src));
+        service.submit(() -> run(res, latch, 75000, 100000, src));
+        service.submit(() -> run(res, latch, 100000, 125000, src));
+        service.submit(() -> run(res, latch, 125000, 150000, src));
+        service.submit(() -> run(res, latch, 150000, 175000, src));
+        service.submit(() -> run(res, latch, 175000, 200000, src));
+        service.submit(() -> run(res, latch, 200000, 225000, src));
+        service.submit(() -> run(res, latch, 225000, 250000, src));
+        service.submit(() -> run(res, latch, 250000, 275000, src));
+        service.submit(() -> run(res, latch, 275000, 300000, src));
+        service.submit(() -> run(res, latch, 300000, 325000, src));
+        service.submit(() -> run(res, latch, 325000, 350000, src));
         service.submit(() -> run(res, latch, 350000, 370000, src));
 
 //        service.submit(() -> run(res, latch, 0, 100000, src));
@@ -83,9 +90,9 @@ public class TestController {
                 String key = src.get(i);
                 try {
                     DataVO vo = allenDBProxy.get(key);
-                    if (vo.getVal() == null) {
-                        res.put(key, "数据丢失");
-                    }
+//                    if (vo.getVal() == null) {
+//                        res.put(key, "数据丢失");
+//                    }
                 } catch (Exception e) {
                     res.put(key, e.toString());
                 }

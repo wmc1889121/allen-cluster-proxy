@@ -5,6 +5,7 @@ import com.allen.common.entity.BusMsgType;
 import com.allen.common.entity.Command;
 import com.allen.common.entity.DataVO;
 import com.allen.common.entity.Node;
+import com.allen.protocol.client.AllenClient;
 import com.allen.protocol.entity.AllenException;
 import com.allen.protocol.entity.MessageType;
 import com.allen.protocol.entity.NettyMessage;
@@ -26,18 +27,21 @@ public class AllenDBProxy {
         for (int i = 0; i < strNodes.length; i++) {
             String[] idAddress = strNodes[i].split("@");
             String[] hostPort = idAddress[1].split(":");
-            Node node = new Node(Long.valueOf(idAddress[0]), hostPort[0], Integer.valueOf(hostPort[1]));
-            node.getClient().registerHandler("response-handler", new ResponseHandler(node.getClient()));
+            Node node = new Node(Long.valueOf(idAddress[0]), hostPort[0], Integer.valueOf(hostPort[1]), 8);
             nodes.put(node.getId(), node);
         }
     }
 
-    public Node conn(long nodeId) throws Exception {
+    private AllenClient conn(long nodeId) throws Exception {
         Node node = nodes.get(nodeId);
-        if (node != null && !node.getClient().isConnected()) {
-            node.getClient().connect();
+        if (node == null) {
+            return null;
         }
-        return node;
+        AllenClient client = node.getClient();
+        if (!client.isConnected()) {
+            client.connect();
+        }
+        return client;
     }
 
     public DataVO get(String key) throws Exception {
@@ -62,10 +66,10 @@ public class AllenDBProxy {
     }
 
     private Object request(long nodeId, Command command) throws Exception {
-        Node leader = conn(nodeId);
+        AllenClient leader = conn(nodeId);
         HashMap<String, String> att = new HashMap<>();
         att.put(Constants.NETTY_MESSAGE_HEADER_ATTR_BODY_TYPE, BusMsgType.REQ_CLIENT.ordinal() + "");
-        NettyMessage res = leader.getClient().request(att, command);
+        NettyMessage res = leader.request(att, command);
         NettyMessage.Header header = res.getHeader();
         if (header.getType() == MessageType.REDIRECT.code()) {
             leaderId = Long.valueOf(header.getAttribute(Constants.NETTY_MESSAGE_HEADER_ATTR_REDIRECT_PATH));
